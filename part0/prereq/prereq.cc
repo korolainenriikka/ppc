@@ -1,7 +1,8 @@
 // Tilanne:
 // looppaaminen onnistuu mutta: 
 // jos mulla on koordinaatit x y ja c ja muistipaikka mistä data alkaa,
-// niin miten pääsen datan kohtaan jossa seuraava lukuarvo on?
+// miten pääsen haluttuun kohtaan dataa?
+// eli missä järjestyksessä data on muistissa ja mistä tiedän missä järjestyksessä se on?
 
 #include <iostream>
 #include <vector>
