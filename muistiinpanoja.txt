@@ -1,0 +1,6 @@
+append kans <<:lla
+* on pointteri
+const on vakio constexpr on immutable funktio (pure function)
+
+vesi: 3*460 200
+jäätiin chap 3
