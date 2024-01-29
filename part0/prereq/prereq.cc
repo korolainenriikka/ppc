@@ -1,14 +1,3 @@
-// Tilanne:
-// looppaaminen onnistuu mutta: 
-// jos mulla on koordinaatit x y ja c ja muistipaikka mistä data alkaa,
-// miten pääsen haluttuun kohtaan dataa?
-// eli missä järjestyksessä data on muistissa ja mistä tiedän missä järjestyksessä se on?
-
-#include <iostream>
-#include <vector>
-
-using namespace std;
-
 struct Result {
     float avg[3];
 };
@@ -25,53 +14,26 @@ This is the function you need to implement. Quick reference:
 */
 Result calculate(int ny, int nx, const float *data, int y0, int x0, int y1, int x1) {
     // find sum of each component
-    float a = *data;
-    float r = a*0.0;
-    float g = 0.0;
-    float b = 0.0;
+    double r = 0.0;
+    double g = 0.0;
+    double b = 0.0;
 
-    // looppaa jokainen rivi kuvassa
-    for (int x = x0; x < x1-x0; ++x) {
-        // looppaa jokainen sarake
-        for (int y = y0; y < y1-y0; ++y) {
-            // looppaa jokainen rgb
-            //for (int c = 0; c < 3; ++c) {
-                //cout << data[c + 3 * x + 3 * nx * y];
-            r += 1;
-            g += 1;
-            b += 1;
-            //}
+    for (int x = x0; x < x1; ++x) {
+        for (int y = y0; y < y1; ++y) {
+            r += data[0 + 3 * x + 3 * nx * y];
+            g += data[1 + 3 * x + 3 * nx * y];
+            b += data[2 + 3 * x + 3 * nx * y];
         }
     }
 
-    // divide by number of pixels (nx * ny)
-    r = r / nx*ny;
-    g = g / nx*ny;
-    b = b / nx*ny;
+    // divide by number of pixels
+    int count_of_pixels = (y1-y0)*(x1-x0);
+    float r_avg = r / count_of_pixels;
+    float g_avg = g / count_of_pixels;
+    float b_avg = b / count_of_pixels;
 
     // create result
-    Result result{{r, g, b}};
-    return result;
+    Result res = Result{{r_avg, g_avg, b_avg}};
+    return res;
 }
 
-// int main()
-// {
-//     int ny = 1;
-//     int nx = 1;
-//     const vector<vector<float>> data = {
-//         {
-//             {1.0f, 1.0f, 1.0f}
-//         },
-//         {
-//             {2.0f, 3.0f, 4.0f}
-//         }
-//     };
-
-//     int y0 = 0;
-//     int x0 = 0;
-//     int y1 = 2;
-//     int x1 = 1;
-
-//     Result res = calculate(ny, nx, &data[0][0], y0, x0, y1, x1);
-//     //cout << res << "\n";
-// }
