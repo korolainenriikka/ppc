@@ -25,7 +25,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     // CREATE NORMALIZED MATRIX
     // create vector size ny*nx
     int ncols = nx + (4-nx%4);
-    std::vector<double> normalized(ny*nx, 0.0);
+    std::vector<double> normalized(ny*ncols, 0.0);
 
     for (int y = 0; y < ny; ++y) {
         double sum = 0;
@@ -38,10 +38,11 @@ void correlate(int ny, int nx, const float *data, float *result) {
         // vähennä mean jokaisesta elementistä
         for (int x = 0; x < nx; ++x){
             int i = x + y*nx;
+            int i_norm = x + y*ncols;
             if (mean != 0) {
-                normalized[i] = data[i] - mean;
+                normalized[i_norm] = data[i] - mean;
             } else {
-                normalized[i] = data[i];
+                normalized[i_norm] = data[i];
             }
         }
         //std::cout << "\n";
@@ -51,14 +52,14 @@ void correlate(int ny, int nx, const float *data, float *result) {
     for (int y = 0; y < ny; ++y) {
         double sum_of_squares = 0.0;
         for (int x = 0; x < nx; ++x) {
-            int i = x + y*nx;
+            int i = x + y*ncols;
             sum_of_squares += normalized[i]*normalized[i];
         }
         // jaa sum of squares neliöjuurella jokainen
         double sqrt_sum_of_squares = sqrt(sum_of_squares);
 
         for (int x = 0; x < nx; ++x) {
-            int i = x + y*nx;
+            int i = x + y*ncols;
             normalized[i] = normalized[i] / sqrt_sum_of_squares;
         }
     }
@@ -88,7 +89,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
             for (int k = 0; k < nx; ++k) {
                 // rows i and j in index k
                 //std::cout << normalized[k + y*nx] << " " << normalized[k + x*nx] << "\n";
-                dot_product += normalized[k + y*nx] * normalized[k + x*nx];
+                dot_product += normalized[k + y*ncols] * normalized[k + x*ncols];
             }
             //std::cout <<dot_product;
             result[x + y * ny] = dot_product;
