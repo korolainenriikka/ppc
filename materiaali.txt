@@ -1,0 +1,6 @@
+luettu
+
+chapter 1
+chapter 2
+    Intro-OpenMP
+    V2-V3Asm
