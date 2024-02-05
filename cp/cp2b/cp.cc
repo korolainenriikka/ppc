@@ -3,6 +3,14 @@
 //#include <array>
 #include <vector>
 
+/**
+ * TILANNE
+ * ilmeisesti alempi parallelisoi vaan uloimman loopin suorituksen.
+ * parallel forien viljely joka puolelle hidastaa (paljon overheadia?)
+ * pitäis olla jotenkin et jokainen sisimmän loopin ajo voi suorittaa eri threadeilla
+ * mut miten kerron open mp:lle et niin saa tehä?
+*/
+
 /*
 This is the function you need to implement. Quick reference:
 - input rows: 0 <= y < ny
