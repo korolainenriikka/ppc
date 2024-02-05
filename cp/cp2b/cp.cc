@@ -38,6 +38,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // normalize the input rows so that for each row the sum of the squares of the elements is 1
+    #pragma omp parallel for
     for (int y = 0; y < ny; ++y) {
         double sum_of_squares = 0.0;
         for (int x = 0; x < nx; ++x) {
@@ -57,33 +58,16 @@ void correlate(int ny, int nx, const float *data, float *result) {
         result[a + a*ny] = 1;
     }
 
-    // print normalized
-    // for (int y = 0; y < ny; ++y) {
-    //     for (int x = 0; x < nx; ++x) {
-    //         std::cout << normalized[x + y*nx] << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
-    // std::cout << "\n";
-
     // Calculate the (upper triangle of the) matrix product Y = XX^T
+    #pragma omp parallel for
     for (int y = 0; y < ny; ++y) {
         for (int x = y+1; x < ny; ++x) {
-            //std::cout << y;
-            //std::cout << x;
-            //yth row and xth row
             double dot_product = 0.0;
             for (int k = 0; k < nx; ++k) {
                 // rows i and j in index k
-                //std::cout << normalized[k + y*nx] << " " << normalized[k + x*nx] << "\n";
                 dot_product += normalized[k + y*nx] * normalized[k + x*nx];
             }
-            //std::cout <<dot_product;
             result[x + y * ny] = dot_product;
         }
     }
-
-    // independent operations
-    // multiplications of components of the dot product
-    // computations of individual dot products
 }
