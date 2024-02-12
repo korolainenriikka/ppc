@@ -1,15 +1,5 @@
-//#include <iostream>
 #include <cmath>
-//#include <array>
 #include <vector>
-
-/**
- * TILANNE
- * ilmeisesti alempi parallelisoi vaan uloimman loopin suorituksen.
- * parallel forien viljely joka puolelle hidastaa (paljon overheadia?)
- * pitäis olla jotenkin et jokainen sisimmän loopin ajo voi suorittaa eri threadeilla
- * mut miten kerron open mp:lle et niin saa tehä?
-*/
 
 /*
 This is the function you need to implement. Quick reference:
@@ -23,7 +13,6 @@ void correlate(int ny, int nx, const float *data, float *result) {
     // NORMALIZATION
 
     // CREATE NORMALIZED MATRIX
-    // create vector size ny*nx
     std::vector<double> normalized(ny*nx, 0.0);
 
     for (int y = 0; y < ny; ++y) {
@@ -32,7 +21,6 @@ void correlate(int ny, int nx, const float *data, float *result) {
             sum += data[x + y*nx];
         }
         double mean = sum/nx;
-        //std::cout << mean << " ";
     
         // vähennä mean jokaisesta elementistä
         for (int x = 0; x < nx; ++x) {
@@ -42,7 +30,6 @@ void correlate(int ny, int nx, const float *data, float *result) {
                 normalized[x + y*nx] = data[x + y*nx];
             }
         }
-        //std::cout << "\n";
     }
 
     // normalize the input rows so that for each row the sum of the squares of the elements is 1
@@ -67,12 +54,12 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // Calculate the (upper triangle of the) matrix product Y = XX^T
-    #pragma omp parallel for
+    #pragma omp parallel
+    #pragma omp for nowait
     for (int y = 0; y < ny; ++y) {
         for (int x = y+1; x < ny; ++x) {
             double dot_product = 0.0;
             for (int k = 0; k < nx; ++k) {
-                // rows i and j in index k
                 dot_product += normalized[k + y*nx] * normalized[k + x*nx];
             }
             result[x + y * ny] = dot_product;
