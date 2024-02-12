@@ -18,6 +18,10 @@ main:
 	movq	%fs:40, %rax
 	movq	%rax, 248(%rsp)
 	xorl	%eax, %eax
+	movl	$1, %esi
+	leaq	_ZSt4cout(%rip), %rax
+	movq	%rax, %rdi
+	call	_ZNSolsEi@PLT
 	movl	$0, 60(%rsp)
 	jmp	.L2
 .L3:
@@ -35,11 +39,6 @@ main:
 .L2:
 	cmpl	$7, 60(%rsp)
 	jle	.L3
-#APP
-# 14 "testi.cpp" 1
-	addition
-# 0 "" 2
-#NO_APP
 	movq	64(%rsp), %rax
 	movq	72(%rsp), %rdx
 	movq	%rax, 128(%rsp)

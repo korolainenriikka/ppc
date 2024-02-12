@@ -1,4 +1,4 @@
-//#include <iostream>
+#include <iostream>
 #include <cmath>
 //#include <array>
 #include <vector>
@@ -17,6 +17,14 @@ void correlate(int ny, int nx, const float *data, float *result) {
     // CREATE NORMALIZED MATRIX
     // create vector size ny*nx
     std::vector<double> normalized(ny*nx, 0.0);
+    //print normalized
+    for (int y = 0; y < ny; ++y) {
+        for (int x = 0; x < nx; ++x) {
+            std::cout << data[x + y*nx] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
 
     for (int y = 0; y < ny; ++y) {
         double sum = 0;
@@ -24,7 +32,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
             sum += data[x + y*nx];
         }
         double mean = sum/nx;
-        //std::cout << mean << " ";
+        std::cout << mean << " ";
     
         // vähennä mean jokaisesta elementistä
         for (int x = 0; x < nx; ++x) {
@@ -36,6 +44,14 @@ void correlate(int ny, int nx, const float *data, float *result) {
         }
         //std::cout << "\n";
     }
+    //print normalized
+    for (int y = 0; y < ny; ++y) {
+        for (int x = 0; x < nx; ++x) {
+            std::cout << normalized[x + y*nx] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
 
     // normalize the input rows so that for each row the sum of the squares of the elements is 1
     for (int y = 0; y < ny; ++y) {
@@ -45,6 +61,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
         }
         // jaa sum of squares neliöjuurella jokainen
         double sqrt_sum_of_squares = sqrt(sum_of_squares);
+        std::cout << sqrt_sum_of_squares << "\n";
 
         for (int x = 0; x < nx; ++x) {
             normalized[x + y*nx] = normalized[x + y*nx] / sqrt_sum_of_squares;
@@ -57,14 +74,18 @@ void correlate(int ny, int nx, const float *data, float *result) {
         result[a + a*ny] = 1;
     }
 
-    // print normalized
-    // for (int y = 0; y < ny; ++y) {
-    //     for (int x = 0; x < nx; ++x) {
-    //         std::cout << normalized[x + y*nx] << " ";
-    //     }
-    //     std::cout << "\n";
-    // }
-    // std::cout << "\n";
+    //print normalized
+    for (int y = 0; y < ny; ++y) {
+        for (int x = 0; x < nx; ++x) {
+            std::cout << normalized[x + y*nx] << " ";
+        }
+        std::cout << "\n";
+    }
+    std::cout << "\n";
+
+    if (nx > 100 || ny > 100) {
+        return;
+    }
 
     // Calculate the (upper triangle of the) matrix product Y = XX^T
     for (int y = 0; y < ny; ++y) {
