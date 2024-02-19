@@ -19,7 +19,7 @@ This is the function you need to implement. Quick reference:
 */
 void correlate(int ny, int nx, const float *data, float *result) {
     constexpr int nb = 4;
-    // vectors per row
+    // vectors per row (column in transpose)
     int na = nx % nb == 0 ? nx / nb : (nx/nb)+1;
     bool has_padding = nx % nb != 0;
 
@@ -37,23 +37,29 @@ void correlate(int ny, int nx, const float *data, float *result) {
             for (int b = 0; b < nb; ++b) {
                 // location on the row
                 int i = a * nb + b;
-                vdata[na*y + a][b] = i < nx ? data[nx*y + i] : 0.0;
+                //vdata[na*y + a][b] = i < nx ? data[nx*y + i] : 0.0;
+                // transpoosi:
+                double prev = i < nx ?  data[nx*y+i] : 0.0;
+                vdata[ny*a + y][b] = prev;
             }
         }
     }
+    // mulla on na riviä ja y saraketta. miten löydän oikean kohdan vdatassa, johon kirjoitan?
+    // sarake: +y rivi: 
 
     #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         double4_t vsum = {0.0, 0.0, 0.0, 0.0};
         for (int a = 0; a < na; ++a) {
-            vsum += vdata[a + y*na];
+            //vsum += vdata[a + y*na];
+            vsum += vdata[ny*a + y];
         }
         double sum = vsum[0]+vsum[1]+vsum[2]+vsum[3];
         double mean = sum/nx;
     
         //vähennä mean jokaisesta elementistä
         for (int a = 0; a < na; ++a){
-            int i = a + y*na;
+            int i = ny*a + y;
             vnorm[i] = vdata[i] - mean;
         }
     }
@@ -65,7 +71,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
         #pragma omp parallel for schedule(static, 1)
         for (int y = 0; y < ny; ++y) {
             for(int b = nb-no_of_padding; b < nb; ++b) {
-                vnorm[(na-1) + na*y][b] = 0.0;
+                //vnorm[(na-1) + na*y][b] = 0.0;
+                vnorm[ny*(na-1) + y][b] = 0.0; // column y : + y last vector:
             }
         }
     }
@@ -76,7 +83,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
         // sos = sum of squares
         double4_t vsos =  {0.0, 0.0, 0.0, 0.0};
         for (int a = 0; a < na; ++a) {
-            int i = a + y*na;
+            //int i = a + y*na;
+            int i = ny*a + y;
             vsos += vnorm[i]*vnorm[i];
         }
         double sum_of_squares = vsos[0]+vsos[1]+vsos[2]+vsos[3];
@@ -84,7 +92,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
 
         // jaa sum of squares neliöjuurella jokainen
         for (int a = 0; a < na; ++a) {
-            int i = a + y*na;
+            //int i = a + y*na;
+            int i = ny*a + y;
             vnorm[i] = vnorm[i] / sqrt_sum_of_squares;
         }
     }
@@ -93,7 +102,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
     if (has_padding){
         for (int y = 0; y < ny; ++y) {
             for(int b = nb-no_of_padding; b < nb; ++b) {
-                vnorm[(na-1) + na*y][b] = 0.0;
+                //vnorm[(na-1) + na*y][b] = 0.0;
+                vnorm[ny*(na-1) + y][b] = 0.0;
             }
         }
     }
@@ -106,13 +116,15 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // Calculate the (upper triangle of the) matrix product Y = XX^T
+    int count_of_sums = 16; // edit to experiment
     #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         for (int x = y+1; x < ny; ++x) {
             // akkumuloidaan neljää summaa
             double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
             for (int k = 0; k < na; ++k) {
-                double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
+                //double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
+                double4_t tulot = vnorm[ny*k + y] * vnorm[ny*k + x];
                 dot_product_v += tulot;
             }
             double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
