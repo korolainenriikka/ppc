@@ -1,0 +1,52 @@
+IDEOITA
+
+transpoosi
+    pointti niiku se että tulot on aina eri riveiltä, eli luetaan muistia miten sattuu
+    idea: transpoosi, jolloin viereiset rivit mut sama sarake on vierekkäin muistissa. pitäis nopeutua mut ei nopeudu
+        ongelma? iteroin nyt transpoosissa ensin sarakkeen sit rivin, en toisin päin. hidas ja huono
+
+reuse data 
+    idea: ota esim kolme riviä kerralla ja laske niiden kaikkia keskinäisiä pistetuloja samaan aikaan
+    ongelma: mitkä pistetulot on laskettu mitkä ei menee aikas monimutkaiseksi
+pystyiskö uudelleenkäyttää jotenki sarakkeiden suuntaisesti?
+
+nyt testissä: vektorointi pelkästään vs. vektorointi kahdella summalla jota akkumuloidaan kerralla 
+    vector + instruction level
+
+
+openmp + vektorit 
+Running benchmark
+Compiling...
+Compiled
+test                    time  result
+benchmarks/1.txt      0.091s  pass
+
+  Your code used 0.091 sec of wallclock time, and 0.494 sec of CPU time
+  ≈ you used 5.4 simultaneous hardware threads on average
+
+benchmarks/2a.txt     1.097s  pass
+
+  Your code used 1.097 sec of wallclock time, and 6.528 sec of CPU time
+  ≈ you used 5.9 simultaneous hardware threads on average
+
+benchmarks/2b.txt     1.103s  pass
+
+  Your code used 1.103 sec of wallclock time, and 6.894 sec of CPU time
+  ≈ you used 6.2 simultaneous hardware threads on average
+
+benchmarks/2c.txt     1.273s  pass
+
+  Your code used 1.273 sec of wallclock time, and 7.898 sec of CPU time
+  ≈ you used 6.2 simultaneous hardware threads on average
+
+benchmarks/2d.txt     1.137s  pass
+
+  Your code used 1.137 sec of wallclock time, and 7.532 sec of CPU time
+  ≈ you used 6.6 simultaneous hardware threads on average
+
+>> ./cp benchmarks/3.txt
+benchmarks/3.txt   [failed]
+
+It seems that your program timed out.
+The test should have ran in less than 13.6 seconds.
+You can override allowed running time with --timeout [timeout in seconds] or disable running time checks with --no-timeout.
