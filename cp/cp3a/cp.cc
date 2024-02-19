@@ -6,7 +6,7 @@ typedef double double4_t __attribute__ ((vector_size (4 * sizeof(double))));
 /**
  * benchmarks:
  * vectorized: Time limit exceeded
- * pragma openmp'd: 
+ * pragma openmp'd vectors: 12.6 sec
 */
 
 /*
@@ -18,9 +18,6 @@ This is the function you need to implement. Quick reference:
 - only parts with 0 <= j <= i < ny need to be filled
 */
 void correlate(int ny, int nx, const float *data, float *result) {
-    // number of columns in normalized matrix with padding
-    //int ncols = nx + (4-nx%4);
-    // vec size
     constexpr int nb = 4;
     // vectors per row
     int na = nx % nb == 0 ? nx / nb : (nx/nb)+1;
@@ -34,6 +31,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     std::vector<double4_t> vnorm(ny*na);
 
     // kopioi datan sisältö vektorimuodon dataan
+    #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         for (int a = 0; a < na; ++a) {
             for (int b = 0; b < nb; ++b) {
@@ -44,6 +42,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
         }
     }
 
+    #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         double4_t vsum = {0.0, 0.0, 0.0, 0.0};
         for (int a = 0; a < na; ++a) {
@@ -63,6 +62,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     int no_of_padding = nb - (nx % nb);
     // vikan vektorin indeksi on na-1
     if (has_padding){
+        #pragma omp parallel for schedule(static, 1)
         for (int y = 0; y < ny; ++y) {
             for(int b = nb-no_of_padding; b < nb; ++b) {
                 vnorm[(na-1) + na*y][b] = 0.0;
@@ -71,6 +71,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // normalize the input rows so that for each row the sum of the squares of the elements is 1
+    #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         // sos = sum of squares
         double4_t vsos =  {0.0, 0.0, 0.0, 0.0};
@@ -99,6 +100,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     
     // MATRIX PRODUCT
     // diagonal elements are always 1
+    #pragma omp parallel for schedule(static, 1)
     for (int a = 0; a < ny; ++a) {
         result[a + a*ny] = 1;
     }
@@ -107,19 +109,22 @@ void correlate(int ny, int nx, const float *data, float *result) {
     #pragma omp parallel for schedule(static, 1)
     for (int y = 0; y < ny; ++y) {
         for (int x = y+1; x < ny; ++x) {
-            //yth row and xth row
             // akkumuloidaan neljää summaa
             double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
             for (int k = 0; k < na; ++k) {
-                // rows i and j in index k
-                // luo vektori mis on neljä tuloo
-                // rivi x ja y
                 double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
                 dot_product_v += tulot;
             }
             double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
-            //std::cout <<dot_product;
             result[x + y * ny] = dot_product;
         }
     }
 }
+
+/**
+ * MEMORY ACCESS
+ * useless memory accesses for the overflow: fetching zeros from memory max 9000*7 doubles / 9000*9000 doubles, <0.01% ei välii
+ * tuloja vektoreiden välillä vois laskee missä vaan järjestyksessä. ei oo välii missä järkässä lasketaan
+ *      transpoosi?? vektoreista
+ *      16 vektori dot product summaa ja akkumuloi noita kerralla kaikkia.
+*/
