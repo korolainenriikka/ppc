@@ -101,22 +101,16 @@ void correlate(int ny, int nx, const float *data, float *result) {
         for (int x = y+1; x < ny; ++x) {
             //yth row and xth row
             // akkumuloidaan neljää summaa
-            double4_t dot_product_v_even = {0.0, 0.0, 0.0, 0.0};
-            double4_t dot_product_v_odd = {0.0, 0.0, 0.0, 0.0};
-            for (int k = 0; k < na; k+=2) {
+            double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
+            for (int k = 0; k < na; k++) {
                 // rows i and j in index k
                 // luo vektori mis on neljä tuloo
                 // rivi x ja y
                 double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
-                dot_product_v_even += tulot;
+                dot_product_v += tulot;
                 //dot_product_v_even += vnorm[k + y*na] * vnorm[k + y*na];
-                if (k + 1 < na) {
-                    double4_t tulot_odd = vnorm[k + y*na +1] * vnorm[k + x*na+1];
-                    dot_product_v_odd += tulot_odd;
-                }
             }
-            double dot_product = dot_product_v_even[0]+dot_product_v_even[1]+dot_product_v_even[2]+dot_product_v_even[3]
-            +dot_product_v_odd[0]+dot_product_v_odd[1]+dot_product_v_odd[2]+dot_product_v_odd[3];
+            double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
             //std::cout <<dot_product;
             result[x + y * ny] = dot_product;
         }

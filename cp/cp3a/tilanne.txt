@@ -1,9 +1,22 @@
 IDEOITA
 
+materiaali: on ilmeisesti hyvä idea säilyttää sekä tavista ETTÄ transpoosia!
+mun ei tarvii laskee koko dot productia kerralla. voin laskee osan tuloista eka, ja palata samaan kohtaan myöhemmin ja 
+    lisätä sinne lukuja sitten
+
+IDEA:
+neliöitä inputista, NELIÖN KOKO? 2x2 neliöllä 4 tuloa
+-> päddääminen: niin et on jaollinen kahdella
+-> result matriisin iterointi
+    alkaa: 0,2 row, col plussataan 2 raja on paddedin leveys / 2
+-> epäjaollisten kanssa pärjääminen
+
 transpoosi
     pointti niiku se että tulot on aina eri riveiltä, eli luetaan muistia miten sattuu
     idea: transpoosi, jolloin viereiset rivit mut sama sarake on vierekkäin muistissa. pitäis nopeutua mut ei nopeudu
         ongelma? iteroin nyt transpoosissa ensin sarakkeen sit rivin, en toisin päin. hidas ja huono
+        transpoosi taitaa kusee siihen, että vektorit on kuiteski rivittäin. silti hypitään eessun taassun
+        huono idea: riveittäin pistetulo
 
 reuse data 
     idea: ota esim kolme riviä kerralla ja laske niiden kaikkia keskinäisiä pistetuloja samaan aikaan
@@ -11,8 +24,12 @@ reuse data
 pystyiskö uudelleenkäyttää jotenki sarakkeiden suuntaisesti?
 
 nyt testissä: vektorointi pelkästään vs. vektorointi kahdella summalla jota akkumuloidaan kerralla 
-    vector + instruction level
+    vector + instruction level  
+        --> ei paranna tilannetta
 
+random ideoita 
+    calculate many pixels in the result at one time 
+        calculate many dot products at one time
 
 openmp + vektorit 
 Running benchmark
