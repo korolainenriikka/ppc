@@ -54,8 +54,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // Calculate the (upper triangle of the) matrix product Y = XX^T
-    #pragma omp parallel
-    #pragma omp for nowait
+    #pragma omp parallel for schedule(static,1)
     for (int y = 0; y < ny; ++y) {
         for (int x = y+1; x < ny; ++x) {
             double dot_product = 0.0;
