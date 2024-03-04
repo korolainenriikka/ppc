@@ -11,6 +11,14 @@ neliöitä inputista, NELIÖN KOKO? 2x2 neliöllä 4 tuloa
     alkaa: 0,2 row, col plussataan 2 raja on paddedin leveys / 2
 -> epäjaollisten kanssa pärjääminen
 
+testi 36 on aika hyvä tän deebugaamiseen!
+1. paddaa kolmio niin että on kolmelle jaollista
+    eihähn täs oo järkee koska emmävoi päddää resulttia mun pitäis päddää inputtii
+    laske kaikki 3x3 neliöt resultissa kerralla, tee loput "ylijäämänä" sen jälkeen
+2. pidä huoli että iteroit oikein
+3. laske 9 kerralla
+4. tadaa
+
 transpoosi
     pointti niiku se että tulot on aina eri riveiltä, eli luetaan muistia miten sattuu
     idea: transpoosi, jolloin viereiset rivit mut sama sarake on vierekkäin muistissa. pitäis nopeutua mut ei nopeudu

@@ -96,11 +96,11 @@ void correlate(int ny, int nx, const float *data, float *result) {
     }
 
     // Calculate the (upper triangle of the) matrix product Y = XX^T
+    constexpr int sq_size = 3;
     #pragma omp parallel for schedule(static, 1)
-    for (int y = 0; y < ny; ++y) {
-        for (int x = y+1; x < ny; ++x) {
-            //yth row and xth row
-            // akkumuloidaan neljää summaa
+    for (int y = 0; (y+(sq_size-1)) < ny; y+=sq_size) {
+        for (int x = sq_size; (x+(sq_size-1)) < ny; x+=sq_size) {
+            std::cout << "ohoo 3x3 neliö";
             double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
             for (int k = 0; k < na; k++) {
                 // rows i and j in index k
@@ -108,10 +108,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
                 // rivi x ja y
                 double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
                 dot_product_v += tulot;
-                //dot_product_v_even += vnorm[k + y*na] * vnorm[k + y*na];
             }
-            double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
-            //std::cout <<dot_product;
+            double dot_product = dot_product_v[0] + dot_product_v[1] + dot_product_v[2] +dot_product_v[3];
             result[x + y * ny] = dot_product;
         }
     }
