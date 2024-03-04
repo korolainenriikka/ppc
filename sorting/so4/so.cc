@@ -2,6 +2,8 @@
 #include <iostream>
 #include <omp.h>
 #include <vector>
+#include <chrono>
+#include <math.h>
 
 typedef unsigned long long data_t;
 
@@ -10,9 +12,10 @@ using namespace std;
 void psort(int n, data_t *data) {
     // FIXME: Implement a more efficient parallel sorting algorithm for the CPU,
     // using the basic idea of merge sort.
-    // eka idea: jaa data max-threads määrään subarrayita, sorttaa subarrayt
-    // sit mergee ne yhteen
+    // nyt: mergee parallelisoidusti aina 2 subarrayta kerrallaan
+    // --> subarrayiden määrä puolittuu per iteraatio
     int ts = omp_get_max_threads();
+    // auto started = std::chrono::high_resolution_clock::now();
 
     // divide array into t subarrays
     int subarr_size = n / ts;
@@ -23,6 +26,7 @@ void psort(int n, data_t *data) {
 
     // parallelly sort subarrays
     vector<data_t> helper(n, 0);
+    vector<data_t> helper2(n, 0);
     vector<int> subarr_pointers(ts,0);
     #pragma omp parallel for
     for (int t = 0; t < ts; ++t) {
@@ -32,54 +36,93 @@ void psort(int n, data_t *data) {
         // copy sorted values to helper
         for (int i = arr_start; i < arr_end; ++i) {
             helper[i] = data[i];
+            helper2[i] = data[i];
         }
         subarr_pointers[t] = arr_start;
     }
 
-    // merge subarrays
+    // MERGE
+    int merge_no = 0; // for following read / write locations
+    int num_subarrays = ts;
+    while (num_subarrays > 1) {
+        // read / write location: alternate between data and helper
+        auto read = merge_no % 2 == 0 ? begin(helper) : begin(helper2);
+        auto write = merge_no % 2 == 0 ? begin(helper2) : begin(helper);
+        cout << "MERGE NUMBER " << merge_no <<'\n';
 
-    // maintain t pointers to subarray indices, find subarray end indices
-    vector<int> arr_ends(ts,0);
-    for (int t = 0; t < ts; ++t) {
-        arr_ends[t] = t == ts-1 ? n : subarr_size * t + subarr_size;
-    }
+        int merge_threads = num_subarrays / 2;
+        cout << "Merging " << num_subarrays << " subarrays\n";
+        cout << "current order: \n";
+        for (int i = 0; i < n; ++i) {
+            cout << read[i] <<' ';
+        }
+        cout << '\n';
+        // merge 2 subarrays at a time
+        int subarr_length = subarr_size * pow(2, merge_no);
+        #pragma omp parallel for
+        for (int m = 0; m < merge_threads; ++m) {
+            cout << "Merging two subarrays\n";
+            auto first_arr_p = m * subarr_length * 2; // 2 bc we handle 2 sub-arrays at a time
+            auto first_arr_ends_p = m * subarr_length * 2 + subarr_length;
+            auto second_arr_p = m * subarr_length * 2 + subarr_length;
+            auto arrs_end_p = m == merge_threads -1 ? n : second_arr_p + subarr_length;
+            cout << first_arr_p << ' ' << second_arr_p << ' ' << arrs_end_p <<'\n';
 
-    for (int i = 0; i < n; ++i) {
-        // cout << "data: \n";
-        // for (int j = 0; j < 21; ++j) {
-        //     cout << data[j]<<',';
-        // }
-        // cout << '\n';
+            for (int i = first_arr_p; i < arrs_end_p; ++i) {
+                cout << "finding value to write to " << i <<'\n';
+                data_t first_val = read[first_arr_p];
+                data_t second_val = read[second_arr_p];
 
+                if (first_val < second_val) {
+                    cout << "first was smaller, writing " << first_val << " from first_pointer at " << first_arr_p <<'\n';
+                    write[i] = first_val;
+                    first_arr_p += 1;
 
-        // find minimum of subarray starts
-        data_t min_number = 0;
-        int min_thread = -1;
-        for (int t = 0; t < ts; ++t) {
-            // -1 means that all values from this subarray have been taken
-            if (subarr_pointers[t] != -1) {
-                data_t current = helper[subarr_pointers[t]]; 
-                if (min_thread == -1 || current < min_number) {
-                    min_number = current;
-                    min_thread = t;
+                    if (first_arr_p == first_arr_ends_p) {
+                        cout << "found the end of first array\n";
+                        // copy rest of values from second arr to write
+                        ++i;
+                        while (i < arrs_end_p) {
+                            write[i] = read[second_arr_p];
+                            ++i;
+                            ++second_arr_p;
+                        }
+                    }
+                } else {
+                    // cout << "second was smaller, writing " << second_val << " to index " << i <<'\n';
+                    write[i] = second_val;
+                    second_arr_p += 1;
+
+                    if (second_arr_p == arrs_end_p) {
+                        // cout << "found the end of the second arr\n";
+                        // copy rest of values from first arr to write
+                        ++i;
+                        while (i < arrs_end_p) {
+                            write[i] = read[first_arr_p];
+                            ++i;
+                            ++first_arr_p;
+                        }
+                    }
                 }
             }
+            cout << "after sorting: \n";
+            for (int i = 0; i < n; ++i) {
+                cout << write[i] <<' ';
+            }
+            cout << '\n';
+            cout << '\n';
         }
 
-        if(min_thread == -1) {
-            break;
+        num_subarrays = num_subarrays / 2;
+        merge_no += 1;
+        if (num_subarrays == 1) {
+            for (int i = 0; i < n; ++i) {
+                data[i] = write[i];
+            }
         }
-
-        // write smallest number to data
-        data[i] = min_number;
-
-        // increment pointer
-        int next_loc = subarr_pointers[min_thread] + 1;
-        // if thread has iterated all subarray values, remove thread from subarr pointers (mark with -1)
-        // thread i indeksi loppuu kohdassa
-        if (next_loc == arr_ends[min_thread]) {
-            next_loc = -1;
-        }
-        subarr_pointers[min_thread] = next_loc;
     }
+
+
+    // auto done2 = std::chrono::high_resolution_clock::now();
+    // std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(done2-done).count();
 }

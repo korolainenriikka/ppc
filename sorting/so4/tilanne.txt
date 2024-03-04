@@ -1,2 +1,6 @@
 so4:
 eka submit baseline ilman mitään muutoksia
+toka submit minimin löytö vertailulla
+kolmas submit minimin löytö vektorilla jossa vertailtavat arvot ja hakemalla sieltä seuraava pienin
+neljäs: oikee merge sort parallelisaatiolla
+    nyt kusee: oletan että subarrayiden määrä on jaollinen kahdella. testi jossa näin ei ole (043) failaa
