@@ -31,47 +31,36 @@ reuse data
     ongelma: mitkä pistetulot on laskettu mitkä ei menee aikas monimutkaiseksi
 pystyiskö uudelleenkäyttää jotenki sarakkeiden suuntaisesti?
 
-nyt testissä: vektorointi pelkästään vs. vektorointi kahdella summalla jota akkumuloidaan kerralla 
-    vector + instruction level  
-        --> ei paranna tilannetta
-
 random ideoita 
     calculate many pixels in the result at one time 
         calculate many dot products at one time
 
 openmp + vektorit 
-Running benchmark
-Compiling...
-Compiled
 test                    time  result
-benchmarks/1.txt      0.091s  pass
+benchmarks/1.txt      0.116s  pass
 
-  Your code used 0.091 sec of wallclock time, and 0.494 sec of CPU time
-  ≈ you used 5.4 simultaneous hardware threads on average
-
-benchmarks/2a.txt     1.097s  pass
-
-  Your code used 1.097 sec of wallclock time, and 6.528 sec of CPU time
-  ≈ you used 5.9 simultaneous hardware threads on average
-
-benchmarks/2b.txt     1.103s  pass
-
-  Your code used 1.103 sec of wallclock time, and 6.894 sec of CPU time
+  Your code used 0.116 sec of wallclock time, and 0.718 sec of CPU time
   ≈ you used 6.2 simultaneous hardware threads on average
 
-benchmarks/2c.txt     1.273s  pass
+benchmarks/2a.txt     1.135s  pass
 
-  Your code used 1.273 sec of wallclock time, and 7.898 sec of CPU time
-  ≈ you used 6.2 simultaneous hardware threads on average
+  Your code used 1.135 sec of wallclock time, and 8.264 sec of CPU time
+  ≈ you used 7.3 simultaneous hardware threads on average
 
-benchmarks/2d.txt     1.137s  pass
+benchmarks/2b.txt     1.149s  pass
 
-  Your code used 1.137 sec of wallclock time, and 7.532 sec of CPU time
-  ≈ you used 6.6 simultaneous hardware threads on average
+  Your code used 1.149 sec of wallclock time, and 8.451 sec of CPU time
+  ≈ you used 7.4 simultaneous hardware threads on average
+
+benchmarks/2c.txt     1.005s  pass
+
+  Your code used 1.005 sec of wallclock time, and 7.604 sec of CPU time
+  ≈ you used 7.6 simultaneous hardware threads on average
+
+benchmarks/2d.txt     1.266s  pass
+
+  Your code used 1.266 sec of wallclock time, and 8.856 sec of CPU time
+  ≈ you used 7.0 simultaneous hardware threads on average
 
 >> ./cp benchmarks/3.txt
 benchmarks/3.txt   [failed]
-
-It seems that your program timed out.
-The test should have ran in less than 13.6 seconds.
-You can override allowed running time with --timeout [timeout in seconds] or disable running time checks with --no-timeout.
