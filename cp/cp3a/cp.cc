@@ -98,7 +98,8 @@ void correlate(int ny, int nx, const float *data, float *result) {
     // Calculate the (upper triangle of the) matrix product Y = XX^T
     constexpr int sq_size = 3;
     #pragma omp parallel for schedule(static, 1)
-    for (int y = 0; (y+(sq_size-1)) < ny; y+=sq_size) {
+    int limit = ny - sq_size + 1
+    for (int y = 0; y < limit; y+=sq_size) {
         for (int x = sq_size; (x+(sq_size-1)) < ny; x+=sq_size) {
             std::cout << "ohoo 3x3 neliö";
             double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
