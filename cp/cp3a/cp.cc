@@ -105,23 +105,22 @@ void correlate(int ny, int nx, const float *data, float *result) {
     int count_of_squares_x = std::floor(ny / 3);
 
     for (int y = 0; y < count_of_squares_y * 3; y += 3) {
-        for (int x = (std::floor(y/3)+1) * 3; x < count_of_squares_x * 3; x += 3) {
-            std::cout << "square: ";
-            std::cout << y <<' ';
-            std::cout << x <<'\n';
+        for (int x = (std::floor(y/3) + 1) * 3; x < count_of_squares_x * 3; x += 3) {
+            // nine sums
+            // vector<double> dot_prods =
 
-            // //yth row and xth row
-            // // akkumuloidaan neljää summaa
-            // double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
-            // for (int k = 0; k < na; ++k) {
-            //     // rows i and j in index k
-            //     // luo vektori mis on neljä tuloo
-            //     // rivi x ja y
-            //     double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
-            //     dot_product_v += tulot;
-            // }
-            // double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
-            // result[x + y * ny] = dot_product;
+            //yth row and xth row
+            // akkumuloidaan neljää summaa
+            double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
+            for (int k = 0; k < na; ++k) {
+                // rows i and j in index k
+                // luo vektori mis on neljä tuloo
+                // rivi x ja y
+                double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
+                dot_product_v += tulot;
+            }
+            double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
+            result[x + y * ny] = dot_product;
         }
     }
 }
