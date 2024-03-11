@@ -13,8 +13,6 @@ This is the function you need to implement. Quick reference:
 */
 void correlate(int ny, int nx, const float *data, float *result) {
     // number of columns in normalized matrix with padding
-    //int ncols = nx + (4-nx%4);
-    // vec size
     constexpr int nb = 4;
     // vectors per row
     int na = nx % nb == 0 ? nx / nb : (nx/nb)+1;
@@ -97,23 +95,33 @@ void correlate(int ny, int nx, const float *data, float *result) {
         result[a + a*ny] = 1;
     }
 
+    //
+    // TÄSTÄ ALKAEN NELIÖ KERRALLAAN MUUTOKSET
+    //
+
     // Calculate the (upper triangle of the) matrix product Y = XX^T
-    #pragma omp parallel for schedule(static, 1)
-    for (int y = 0; y < ny; ++y) {
-        for (int x = y+1; x < ny; ++x) {
-            //yth row and xth row
-            // akkumuloidaan neljää summaa
-            double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
-            for (int k = 0; k < na; ++k) {
-                // rows i and j in index k
-                // luo vektori mis on neljä tuloo
-                // rivi x ja y
-                double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
-                dot_product_v += tulot;
-            }
-            double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
-            //std::cout <<dot_product;
-            result[x + y * ny] = dot_product;
+    //#pragma omp parallel for schedule(static, 1)
+    int count_of_squares_y = std::floor((ny / 3) - 1);
+    int count_of_squares_x = std::floor(ny / 3);
+
+    for (int y = 0; y < count_of_squares_y * 3; y += 3) {
+        for (int x = (std::floor(y/3)+1) * 3; x < count_of_squares_x * 3; x += 3) {
+            std::cout << "square: ";
+            std::cout << y <<' ';
+            std::cout << x <<'\n';
+
+            // //yth row and xth row
+            // // akkumuloidaan neljää summaa
+            // double4_t dot_product_v = {0.0, 0.0, 0.0, 0.0};
+            // for (int k = 0; k < na; ++k) {
+            //     // rows i and j in index k
+            //     // luo vektori mis on neljä tuloo
+            //     // rivi x ja y
+            //     double4_t tulot = vnorm[k + y*na] * vnorm[k + x*na];
+            //     dot_product_v += tulot;
+            // }
+            // double dot_product = dot_product_v[0]+dot_product_v[1]+dot_product_v[2]+dot_product_v[3];
+            // result[x + y * ny] = dot_product;
         }
     }
 }

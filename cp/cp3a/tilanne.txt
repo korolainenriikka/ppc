@@ -19,6 +19,8 @@ testi 36 on aika hyvä tän deebugaamiseen!
 3. laske 9 kerralla
 4. tadaa
 
+testi 92
+
 transpoosi
     pointti niiku se että tulot on aina eri riveiltä, eli luetaan muistia miten sattuu
     idea: transpoosi, jolloin viereiset rivit mut sama sarake on vierekkäin muistissa. pitäis nopeutua mut ei nopeudu
