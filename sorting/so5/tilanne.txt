@@ -1,0 +1,18 @@
+eli: etsi max_threads määrä
+sitten: jaa pivoteilla array määrään joka mahtuu max threadsiin
+sitten: std::sorttaa jokainen subarray
+
+eka steppi: tee yks pivot jako
+toka steppi: 
+    tee max_threads pivot jakoa
+        jaa yks kerrallaan aina kooltaan suurin osio, joka arrayssa on
+        implementoitu, mutta ongelma: partitiot on niin eri kokoisia ettei toimi
+
+    tee enemmän pivot jakoja dynaamisella skeduloinnilla
+        ja tämäkään ei toiminut.
+
+ongelma: kun jaetaan pivotteihin ilmeisellä keinoilla, 
+pari subarrayta on massiivisia, ja suuren osan koko on pari elementtiä.
+keksi joku toinen keino tai implementoi epätavallinen pivotti, jollon 
+vika benchmarkki ei oo worst case
+    ota pivot keskihköltä, ei lopusta
