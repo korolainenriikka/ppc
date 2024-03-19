@@ -5,12 +5,16 @@
 
 typedef unsigned long long data_t;
 
-int pivot(int p, int r, data_t* data) {
-    int q = p;
-    int j = p;
+int pivot(int p, int end, data_t* data) {
+    // test: first element as pivot
+    int r = p;
+
+    int q = p+1;
+    int j = p+1;
+    p = p+1;
 
     data_t pivot = data[r];
-    while (j < r) {
+    while (j < end) {
         if (data[j] < pivot) {
             data_t swp = data[j];
             data[j] = data[q];
@@ -20,9 +24,9 @@ int pivot(int p, int r, data_t* data) {
         j += 1;
     }
 
-    data[r] = data[q];
-    data[q] = pivot;
-    return q;
+    data[r] = data[q-1];
+    data[q-1] = pivot;
+    return q-1;
 }
 
 void psort(int n, data_t* data) {
@@ -33,7 +37,6 @@ void psort(int n, data_t* data) {
     int len_qs = num_threads + 1;
     std::vector<int> qs(len_qs,n);
     qs[0] = 0;
-    qs[1] = n;
 
     // zero and n always included
     int num_qs = 2;
@@ -53,7 +56,7 @@ void psort(int n, data_t* data) {
             }
         }
         // pivot: remove last element
-        int new_pivot = pivot(start, end-1, data);
+        int new_pivot = pivot(start, end, data);
         qs[num_qs-1] = new_pivot;
         std::sort(qs.begin(), qs.begin()+len_qs);
         ++num_qs;
@@ -63,7 +66,7 @@ void psort(int n, data_t* data) {
     }
 
     #pragma omp parallel for schedule(static, 1)
-    for (int i = 1; i <= num_qs; ++i){
+    for (int i = 1; i < len_qs; ++i){
         std::sort(data + qs[i-1], data + qs[i]);
     }
 }

@@ -16,3 +16,6 @@ pari subarrayta on massiivisia, ja suuren osan koko on pari elementtiä.
 keksi joku toinen keino tai implementoi epätavallinen pivotti, jollon 
 vika benchmarkki ei oo worst case
     ota pivot keskihköltä, ei lopusta
+    
+pivot alusta ongelma: addressanitizer:deadlysignal tulee välillä ja välillä ei 
+ei mitään hajua miksi tulee
