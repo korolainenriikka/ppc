@@ -6,7 +6,10 @@
 typedef unsigned long long data_t;
 
 int pivot(int p, int end, data_t* data) {
-    // test: first element as pivot
+    // choose random index between p and ent
+    int pivot_i = end == 1 ? p : (std::rand() % (end-p) + p);
+    std::swap(data[p], data[pivot_i]);
+
     int r = p;
 
     int q = p+1;
@@ -16,16 +19,13 @@ int pivot(int p, int end, data_t* data) {
     data_t pivot = data[r];
     while (j < end) {
         if (data[j] < pivot) {
-            data_t swp = data[j];
-            data[j] = data[q];
-            data[q] = swp;
+            std::swap(data[j], data[q]);
             q += 1;
         }
         j += 1;
     }
 
-    data[r] = data[q-1];
-    data[q-1] = pivot;
+    std::swap(data[r], data[q-1]);
     return q-1;
 }
 
@@ -61,9 +61,9 @@ void psort(int n, data_t* data) {
         std::sort(qs.begin(), qs.begin()+len_qs);
         ++num_qs;
     }
-    for (int i = 0; i < len_qs; ++i) {
-        std::cout << qs[i] << ' ';
-    }
+    // for (int i = 0; i < len_qs; ++i) {
+    //     std::cout << qs[i] << ' ';
+    // }
 
     #pragma omp parallel for schedule(static, 1)
     for (int i = 1; i < len_qs; ++i){

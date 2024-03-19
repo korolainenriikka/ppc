@@ -19,3 +19,7 @@ vika benchmarkki ei oo worst case
     
 pivot alusta ongelma: addressanitizer:deadlysignal tulee välillä ja välillä ei 
 ei mitään hajua miksi tulee
+
+entä random pivot -> 2 p 
+
+ideoita: https://243-antas.medium.com/parallel-quicksort-algorithm-991cbfc94adc
