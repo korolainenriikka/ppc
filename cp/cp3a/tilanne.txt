@@ -1,23 +1,5 @@
-IDEOITA
-
-materiaali: on ilmeisesti hyvä idea säilyttää sekä tavista ETTÄ transpoosia!
-mun ei tarvii laskee koko dot productia kerralla. voin laskee osan tuloista eka, ja palata samaan kohtaan myöhemmin ja 
-    lisätä sinne lukuja sitten
-
-IDEA:
-neliöitä inputista, NELIÖN KOKO? 2x2 neliöllä 4 tuloa
--> päddääminen: niin et on jaollinen kahdella
--> result matriisin iterointi
-    alkaa: 0,2 row, col plussataan 2 raja on paddedin leveys / 2
--> epäjaollisten kanssa pärjääminen
-
-testi 36 on aika hyvä tän deebugaamiseen!
-1. paddaa kolmio niin että on kolmelle jaollista
-    eihähn täs oo järkee koska emmävoi päddää resulttia mun pitäis päddää inputtii
-    laske kaikki 3x3 neliöt resultissa kerralla, tee loput "ylijäämänä" sen jälkeen
-2. pidä huoli että iteroit oikein
-3. laske 9 kerralla
-4. tadaa
+tilanne:
+tulee eri tuloksia staattisella skeduloinnilla. kokeiltu: dynamic scheduling
 
 testi 92
 

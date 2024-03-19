@@ -34,7 +34,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     std::vector<double4_t> vnorm(ny*na);
 
     // kopioi datan sisältö vektorimuodon dataan
-    #pragma omp parallel for schedule(static, 1)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (int y = 0; y < ny; ++y) {
         for (int a = 0; a < na; ++a) {
             for (int b = 0; b < nb; ++b) {
@@ -45,7 +45,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
         }
     }
 
-    #pragma omp parallel for schedule(static, 1)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (int y = 0; y < ny; ++y) {
         double4_t vsum = {0.0, 0.0, 0.0, 0.0};
         for (int a = 0; a < na; ++a) {
@@ -119,7 +119,7 @@ void correlate(int ny, int nx, const float *data, float *result) {
     int count_of_squares_y = std::floor((ny / 3) - 1);
     int count_of_squares_x = std::floor(ny / 3);
 
-    #pragma omp parallel for schedule(static, 1)
+    #pragma omp parallel for schedule(dynamic, 1)
     for (int y = 0; y < count_of_squares_y * 3; y += 3) {
         for (int x = (std::floor(y/3) + 1) * 3; x < count_of_squares_x * 3; x += 3) {
             // nine sums first index: y second index: x
