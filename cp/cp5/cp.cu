@@ -26,8 +26,14 @@ __global__ void kernel(float* result, float* normalized, int ny, int nx) {
         return;
     }
 
+    if (x < y) {
+        result[x+y*ny] = 0;
+        return;
+    }
+
     float dot_product = 0.0;
     for (int k = 0; k < nx; ++k) {
+        // tässä tehään sarakkeen x ja sarakkeen y pistetuloa
         dot_product += normalized[k + y*nx] * normalized[k + x*nx];
     }
     result[x + y * ny] = dot_product;
@@ -66,12 +72,25 @@ void correlate(int ny, int nx, const float *data, float *result) {
             normalized[x + y*nx] = normalized[x + y*nx] / sqrt_sum_of_squares;
         }
     }
+    std::vector<float> normalized_T(ny*nx, 0.0);
+    for (int y = 0; y < ny; ++y) {
+        for (int x = 0; x < nx; ++x) {
+            normalized_T[y + x*ny] = normalized[x + y*ny];
+        }
+    }
+    for (int i = 0; i < ny; ++i) {
+        for (int j = 0; j < nx; ++j) {
+            std::cout << normalized_T[nx*i + j] << ' ';
+        }
+        std::cout << '\n';
+    }
 
     // Copy data GPU
     float* dGPU = NULL;
     CHECK(cudaMalloc((void**)&dGPU, nx * ny * sizeof(float)));
     float* rGPU = NULL;
     CHECK(cudaMalloc((void**)&rGPU, ny * ny * sizeof(float))); // result size is ny x ny
+    // CHECK(cudaMemset((void**)&rGPU, 0, ny * ny * sizeof(float)));
     CHECK(cudaMemcpy(dGPU, normalized.data(), nx * ny * sizeof(float), cudaMemcpyHostToDevice));
 
     // Run kernel
