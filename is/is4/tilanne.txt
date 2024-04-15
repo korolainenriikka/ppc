@@ -1,0 +1,5 @@
+tilanne
+
+ilman pragmaa testit menee läpi mut pragmalla kusee koska on globaali variable min_sse
+tarvii private variablesseja joka threadille
+esim. etsitään joka koolla minimum sse. sitten vasta sen jälkeen verrataan koot keskenään, ja luodaan result objekti

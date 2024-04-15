@@ -4,3 +4,15 @@ const on vakio constexpr on immutable funktio (pure function)
 
 vesi: 3*460 200
 jäätiin chap 3
+
+
+so6
+A good initial approach is to split the array into blocks, count how many numbers have each digit in each block (so that you can determine the ranges those numbers should be placed in), and then copy from each block to the appropriate range in order. So instead of having to sequentially go through each number in the array, you only need to scan through each digit to determine the ranges by a cumulative sum.
+
+Another thing, you might find it easier to use a radix that is a power of 2 instead of 10. That way you can extract the digits with bit shifts and masking
+
+
+eli
+mul on suorakaiteita, joilla on kaikilla vakiokoko ja ulkoalueita, joilla myös on vakiokoko
+mun pitää verrata suorakaide+ulkoalueparin sum of squared errorsseja
+tarviin molemmat
