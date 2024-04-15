@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <omp.h>
 
 struct Result {
     int y0;
@@ -81,8 +82,10 @@ Result segment(int ny, int nx, const float *data) {
     double total_sum_of_squares = squared_sums[nx*ny-1];
 
     // Loops for finding min squared error here
-    Result result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
-    double min_sse = total_sum_of_squares; // error is sum_of_squares - stuff, so always less than sum of squares
+    Result empty_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
+    std::vector<double> min_sse(omp_get_max_threads(), total_sum_of_squares); // error is sum_of_squares - stuff, so always less than sum of squares
+    std::vector<Result> min_results(omp_get_max_threads(), empty_result); // error is sum_of_squares - stuff, so always less than sum of squares
+    #pragma omp parallel for
     for (int size_y = 1; size_y <= ny ; ++size_y) { 
         for (int size_x = 1; size_x <= nx; ++size_x) {
             // inner rectangle cannot be entire rectangle
@@ -124,8 +127,9 @@ Result segment(int ny, int nx, const float *data) {
                     double sse = sse_inner + sse_outer;
 
                     // compare sse to current minimum
-                    if (sse < min_sse) {
-                        min_sse = sse;
+                    int thread_id = omp_get_thread_num();
+                    if (sse < min_sse[thread_id]) {
+                        min_sse[thread_id] = sse;
                         std::vector<float> inner_avgs(3, 0.0);
                         std::vector<float> outer_avgs(3, 0.0);
                         for (int c = 0; c < 3; ++c) {
@@ -135,7 +139,7 @@ Result segment(int ny, int nx, const float *data) {
                             double out_sum = sums[3*nx*ny + (c-3)] - in_sum;
                             outer_avgs[c] = out_sum / outer_size;
                         }
-                        result = Result{
+                        min_results[thread_id] = Result{
                             y, x, y+size_y, x+size_x,
                             {outer_avgs[0],outer_avgs[1],outer_avgs[2]},
                             {inner_avgs[0],inner_avgs[1],inner_avgs[2]}
@@ -145,6 +149,7 @@ Result segment(int ny, int nx, const float *data) {
             }
         }
     }
+    int thread_with_best_result = std::distance(std::begin(min_sse), std::min_element(std::begin(min_sse), std::end(min_sse)));
 
-    return result;
+    return min_results[thread_with_best_result];
 }
