@@ -122,6 +122,7 @@ Result segment(int ny, int nx, const float *data) {
     int thread_with_best_result = 0;
     for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
         if (min_sse[thread_i] < best_sse) {
+            best_sse = min_sse[thread_i];
             thread_with_best_result = thread_i;
         }
     }
