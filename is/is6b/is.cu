@@ -1,5 +1,7 @@
 #include <iostream>
 #include <vector>
+#include <cstdlib>
+#include <cuda_runtime.h>
 
 struct Result {
     int y0;
@@ -10,12 +12,26 @@ struct Result {
     float inner[3];
 };
 
+static inline void check(cudaError_t err, const char* context) {
+    if (err != cudaSuccess) {
+        std::cerr << "CUDA error: " << context << ": "
+            << cudaGetErrorString(err) << std::endl;
+        std::exit(EXIT_FAILURE);
+    }
+}
+
+#define CHECK(x) check(x, #x)
+
+static inline int divup(int a, int b) {
+    return (a + b - 1)/b;
+}
+
 /**
  * x, y: upper left corner of rectangle
  * c: color component
  * size_x, size_y: size of rectangle
 */
-int inner_sum(int x, int y, int size_x, int size_y, int nx, std::vector<int>& sums) {
+int inner_sum(int x, int y, int size_x, int size_y, int nx, int* sums) {
     // first orange square: x at x + size_x - 1,  y at y + size_y - 1 (-1 bc size starts from 1)
     int sum1_i = (x+size_x-1) + nx * (y+size_y-1);
     int sum1 = sums[sum1_i];
@@ -33,6 +49,56 @@ int inner_sum(int x, int y, int size_x, int size_y, int nx, std::vector<int>& su
     return inner_sum;
 }
 
+__global__ void kernel(int* best_coords, float* best_sses, int* sums, int nx, int ny) {
+    int size_x = threadIdx.x + blockIdx.x * blockDim.x;
+    int size_y = threadIdx.y + blockIdx.y * blockDim.y;
+
+    if (size_x > nx || size_y > ny || (size_x == nx && size_y == ny) || size_x == 0 || size_y == 0)
+        return;
+
+    int rec_size = size_y * size_x;
+    int outer_size = nx*ny - rec_size;
+    int total_sum = sums[nx*ny-1];
+
+    float best_sse = total_sum;
+    int best_x = 0;
+    int best_y = 0;
+    for (int y = 0; y <= ny - size_y; ++y) {
+        for (int x = 0; x <= nx - size_x; ++x) {
+            // inclusion/exclusion
+            int sum1_i = (x+size_x-1) + nx * (y+size_y-1);
+            int sum1 = sums[sum1_i];
+            int sum2 = y > 0 ? sums[(x+size_x-1) + nx * (y-1)] : 0;
+            int sum3 = x > 0 ? sums[(x-1) + nx * (y + size_y -1)] : 0;
+            int sum4 = (x > 0 && y > 0) ? sums[(x-1) + nx * (y-1)] : 0;
+            int in_sum = sum1 - sum2 - sum3 + sum4;
+
+            int out_sum = total_sum - in_sum;
+
+            // find inner and outer sse
+            float sse_inner = in_sum * (1 - ((1.0/rec_size) * in_sum));
+            float sse_outer = out_sum * (1 - ((1.0/outer_size) * out_sum));
+            float sse = sse_inner + sse_outer;
+
+            // compare sse to current minimum
+            if (sse < best_sse) {
+                best_sse = sse;
+                best_y = y;
+                best_x = x;
+            }
+        }
+    }
+
+    // write found solution to results
+    // write y
+    best_coords[0 + 2 * size_x + 2 * nx * size_y] = best_y;
+    // write x
+    best_coords[1 + 2 * size_x + 2 * nx * size_y] = best_x;
+    // write sse
+    best_sses[size_x + nx * size_y] = best_sse;
+}
+
+
 /*
 This is the function you need to implement. Quick reference:
 - x coordinates: 0 <= x < nx
@@ -43,7 +109,6 @@ This is the function you need to implement. Quick reference:
 Result segment(int ny, int nx, const float *data) {
     // PREPROCESSING: create size nx*ny*3 array where each pixel is sum of that color component until that point
     std::vector<int> sums(nx*ny, 0);
-
     for (int y = 0; y < ny; ++y) {
         int row_sum = 0;
         for (int x = 0; x < nx; ++x) {
@@ -55,70 +120,83 @@ Result segment(int ny, int nx, const float *data) {
             sums[x+nx*y] = sum_i_above + row_sum;
         }
     }
-    int total_sum = sums[nx*ny-1];
 
-    // Loops for finding min squared error here
-    Result min_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
-    float min_sse = total_sum;
-    int full_size = nx*ny;
-    for (int size_y = 1; size_y <= ny ; ++size_y) { 
+    int coordinate_array_size = (2 * nx * ny) + 2 +2;
+    int sse_array_size = (nx+1)*(ny+1) +1;
+
+    // Allocate GPU memory
+    int* sumsGPU = NULL;
+    CHECK(cudaMalloc((void**)&sumsGPU, nx * ny * sizeof(int)));
+    CHECK(cudaMemcpy(sumsGPU, sums.data(), nx * ny * sizeof(int), cudaMemcpyHostToDevice));
+    
+    int* coordGPU = NULL;
+    CHECK(cudaMalloc((void**)&coordGPU, coordinate_array_size * sizeof(int)));
+
+    float* sseGPU = NULL;
+    CHECK(cudaMalloc((void**)&sseGPU, sse_array_size * sizeof(float)));
+
+    // Run kernel
+    dim3 dimBlock(16, 16);
+    dim3 dimGrid(divup(nx, dimBlock.x), divup(ny, dimBlock.y));
+    kernel<<<dimGrid, dimBlock>>>(coordGPU, sseGPU, sumsGPU, nx, ny);
+    CHECK(cudaGetLastError());
+
+    // Copy data back to CPU
+    std::vector<int> best_coords(coordinate_array_size, 0);
+    CHECK(cudaMemcpy(best_coords.data(), coordGPU, coordinate_array_size * sizeof(int) , cudaMemcpyDeviceToHost)); // 32byte err. 1 int on 4 bytee. 8*4=32
+    
+    std::vector<float> best_sses((nx+1)*(ny+1), 0.0); 
+    CHECK(cudaMemcpy(best_sses.data(), sseGPU, sse_array_size * sizeof(float), cudaMemcpyDeviceToHost)); // 32 byte err
+
+    // Release memory
+    CHECK(cudaFree(sumsGPU));
+    CHECK(cudaFree(coordGPU));
+    CHECK(cudaFree(sseGPU));
+
+    // POSTPROCESSING
+
+    // find best segmentation
+    float min_sse = 600*600;
+    Result best_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
+    for (int size_y = 1; size_y <= ny; ++size_y) {
         for (int size_x = 1; size_x <= nx; ++size_x) {
-            // inner rectangle cannot be entire rectangle
             if (size_x == nx && size_y == ny) {
                 continue;
             }
-
-            // run comparison between rectangles of equal size
-            int rec_size = size_y * size_x;
-            int outer_size = full_size - rec_size;
-
-            for (int y = 0; y <= ny - size_y; ++y) {
-                for (int x = 0; x <= nx - size_x; ++x) {
-                    // std::cout << "checking case. size x " << size_x << " size y " << size_y << " pos y " << y << " and x " << x << '\n'; // indeksitarkistus
-
-                    // find sum of color component in inner / outer rectangle
-                    int in_sum = inner_sum(x, y, size_x, size_y, nx, sums);
-                    int out_sum = total_sum - in_sum;
-
-                    // find inner and outer sse
-                    float sse_inner = in_sum * (1 - ((1.0/rec_size) * in_sum));
-                    float sse_outer = out_sum * (1 - ((1.0/outer_size) * out_sum));
-                    float sse = sse_inner + sse_outer;
-
-                    // compare sse to current minimum
-                    if (sse < min_sse) {
-                        min_sse = sse;
-                        min_result = Result{
-                            y, x, y+size_y, x+size_x,
-                            {0.0, 0.0, 0.0},
-                            {0.0, 0.0, 0.0}
-                        };
-                    }
-                }
+            
+            float sse_for_size = best_sses[size_x + nx*size_y];
+            if (sse_for_size < min_sse) {
+                min_sse = sse_for_size;
+                int y0 = best_coords[0 + 2 * size_x + 2 * nx * size_y];
+                int x0 = best_coords[1 + 2 * size_x + 2 * nx * size_y];
+                best_result.y0 = y0; 
+                best_result.x0 = x0;
+                best_result.y1 = y0 + size_y;
+                best_result.x1 = x0 + size_x;
             }
         }
     }
-
-    // POSTPROCESSING: find averages for best segmentation
+    
+    // find averages for best segmentation
     float inner_avg = 0.0;
     float outer_avg = 0.0;
 
-    float min_size_x = min_result.x1 - min_result.x0;
-    float min_size_y = min_result.y1 - min_result.y0;
+    float min_size_x = best_result.x1 - best_result.x0;
+    float min_size_y = best_result.y1 - best_result.y0;
     float rec_size = min_size_x * min_size_y;
     float outer_size = nx*ny - rec_size;
-    float in_sum = inner_sum(min_result.x0, min_result.y0, min_size_x, min_size_y, nx, sums);
+    float in_sum = inner_sum(best_result.x0, best_result.y0, min_size_x, min_size_y, nx, sums.data());
     inner_avg = in_sum / rec_size;
 
-    float out_sum = total_sum - in_sum;
+    float out_sum = sums[nx*ny-1] - in_sum;
     outer_avg = out_sum / outer_size;
 
-    min_result.outer[0] = outer_avg;
-    min_result.outer[1] = outer_avg;
-    min_result.outer[2] = outer_avg;
-    min_result.inner[0] = inner_avg;
-    min_result.inner[1] = inner_avg;
-    min_result.inner[2] = inner_avg;
+    best_result.outer[0] = outer_avg;
+    best_result.outer[1] = outer_avg;
+    best_result.outer[2] = outer_avg;
+    best_result.inner[0] = inner_avg;
+    best_result.inner[1] = inner_avg;
+    best_result.inner[2] = inner_avg;
 
-    return min_result;
+    return best_result;
 }
