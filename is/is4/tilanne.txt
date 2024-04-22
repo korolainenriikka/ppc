@@ -3,3 +3,48 @@ tilanne
 ilman pragmaa testit menee läpi mut pragmalla kusee koska on globaali variable min_sse
 tarvii private variablesseja joka threadille
 esim. etsitään joka koolla minimum sse. sitten vasta sen jälkeen verrataan koot keskenään, ja luodaan result objekti
+
+baseline
+benchmark 1
+0.3 s
+benchmark 2b
+4.8s
+benchmark 3
+timeout
+
+omp 
+benchmark 1
+0.16 s
+benchmark 2b
+2.1 s
+benchmark 3 
+timeout
+
+omp +postprocessing
+benchmark 3
+29.7 sec
+
+
+
+Standard error:
+Could not add performance counter 'cycles': Permission denied
+Profiling requires that /proc/sys/kernel/perf_event_paranoid is configured to allow users to collect metrics. You can try running `sudo sh -c "echo '0'>/proc/sys/kernel/perf_event_paranoid"`
+Could not add performance counter 'instructions': Permission denied
+Could not add performance counter 'branches': Permission denied
+Could not add performance counter 'branch_misses': Permission denied
+
+Traceback (most recent call last):
+  File "/home/riikoro/ppc/is/is4/.ppc/grader.py", line 7, in <module>
+    cli(ppcis.Config(openmp=True))
+  File "/home/riikoro/ppc/is/is4/.ppc/ppcgrader/cli.py", line 164, in cli
+    passed = command.exec(compiler=compiler,
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/riikoro/ppc/is/is4/.ppc/ppcgrader/commands.py", line 273, in exec
+    rep.benchmark(test, runner_output)
+  File "/home/riikoro/ppc/is/is4/.ppc/ppcgrader/reporter.py", line 338, in benchmark
+    human_readable = statistics_terminal(output)
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/riikoro/ppc/is/is4/.ppc/ppcgrader/reporter.py", line 69, in statistics_terminal
+    if total_time:
+       ^^^^^^^^^^
+UnboundLocalError: cannot access local variable 'total_time' where it is not associated with a value

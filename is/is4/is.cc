@@ -130,26 +130,41 @@ Result segment(int ny, int nx, const float *data) {
                     int thread_id = omp_get_thread_num();
                     if (sse < min_sse[thread_id]) {
                         min_sse[thread_id] = sse;
-                        std::vector<float> inner_avgs(3, 0.0);
-                        std::vector<float> outer_avgs(3, 0.0);
-                        for (int c = 0; c < 3; ++c) {
-                            double in_sum = inner_sum(x, y, c, size_x, size_y, nx, sums);
-                            inner_avgs[c] = in_sum / rec_size;
-
-                            double out_sum = sums[3*nx*ny + (c-3)] - in_sum;
-                            outer_avgs[c] = out_sum / outer_size;
-                        }
                         min_results[thread_id] = Result{
                             y, x, y+size_y, x+size_x,
-                            {outer_avgs[0],outer_avgs[1],outer_avgs[2]},
-                            {inner_avgs[0],inner_avgs[1],inner_avgs[2]}
+                            {0.0, 0.0, 0.0},
+                            {0.0, 0.0, 0.0}
                         };
                     }
                 }
             }
         }
     }
-    int thread_with_best_result = std::distance(std::begin(min_sse), std::min_element(std::begin(min_sse), std::end(min_sse)));
 
-    return min_results[thread_with_best_result];
+    // POSTPROCESSING: find averages minimum location
+    int thread_with_best_result = std::distance(std::begin(min_sse), std::min_element(std::begin(min_sse), std::end(min_sse)));
+    Result min_result = min_results[thread_with_best_result];
+    
+    std::vector<float> inner_avgs(3, 0.0);
+    float outer_avgs[3] = {0.0, 0.0, 0.0};
+
+    double min_size_x = min_result.x1 - min_result.x0;
+    double min_size_y = min_result.y1 - min_result.y0;
+    double rec_size = min_size_x * min_size_y;
+    double outer_size = nx*ny - rec_size;
+    for (int c = 0; c < 3; ++c) {
+        double in_sum = inner_sum(min_result.x0, min_result.y0, c, min_size_x, min_size_y, nx, sums);
+        inner_avgs[c] = in_sum / rec_size;
+
+        double out_sum = sums[3*nx*ny + (c-3)] - in_sum;
+        outer_avgs[c] = out_sum / outer_size;
+    }
+    min_result.outer[0] = outer_avgs[0];
+    min_result.outer[1] = outer_avgs[1];
+    min_result.outer[2] = outer_avgs[2];
+    min_result.inner[0] = inner_avgs[0];
+    min_result.inner[1] = inner_avgs[1];
+    min_result.inner[2] = inner_avgs[2];
+
+    return min_result;
 }
