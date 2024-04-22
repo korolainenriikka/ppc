@@ -86,8 +86,9 @@ Result segment(int ny, int nx, const float *data) {
 
     // Loops for finding min squared error here
     Result empty_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
-    std::vector<float> min_sse(omp_get_max_threads(), total_sum_of_squares); // error is sum_of_squares - stuff, so always less than sum of squares
-    std::vector<Result> min_results(omp_get_max_threads(), empty_result); // error is sum_of_squares - stuff, so always less than sum of squares
+    int thread_count = omp_get_max_threads();
+    std::vector<float> min_sse(thread_count, total_sum_of_squares); // error is sum_of_squares - stuff, so always less than sum of squares
+    std::vector<Result> min_results(thread_count, empty_result); // error is sum_of_squares - stuff, so always less than sum of squares
     #pragma omp parallel for schedule(static, 1)
     for (int size_y = 1; size_y <= ny ; ++size_y) { 
         for (int size_x = 1; size_x <= nx; ++size_x) {
@@ -140,7 +141,14 @@ Result segment(int ny, int nx, const float *data) {
     }
 
     // POSTPROCESSING: find averages minimum location
-    int thread_with_best_result = std::distance(std::begin(min_sse), std::min_element(std::begin(min_sse), std::end(min_sse)));
+    int thread_with_best_result = 0;
+    float best_sse = total_sum_of_squares + 1.0;
+    for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
+        if (min_sse[thread_i] < best_sse) {
+            best_sse = min_sse[thread_i];
+            thread_with_best_result = thread_i;
+        }
+    }
     Result min_result = min_results[thread_with_best_result];
     
     std::vector<float> inner_avgs(3, 0.0);
