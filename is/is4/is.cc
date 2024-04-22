@@ -85,7 +85,7 @@ Result segment(int ny, int nx, const float *data) {
     Result empty_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
     std::vector<double> min_sse(omp_get_max_threads(), total_sum_of_squares); // error is sum_of_squares - stuff, so always less than sum of squares
     std::vector<Result> min_results(omp_get_max_threads(), empty_result); // error is sum_of_squares - stuff, so always less than sum of squares
-    #pragma omp parallel for
+    #pragma omp parallel for schedule(static, 1)
     for (int size_y = 1; size_y <= ny ; ++size_y) { 
         for (int size_x = 1; size_x <= nx; ++size_x) {
             // inner rectangle cannot be entire rectangle
@@ -99,8 +99,6 @@ Result segment(int ny, int nx, const float *data) {
 
             for (int y = 0; y <= ny - size_y; ++y) {
                 for (int x = 0; x <= nx - size_x; ++x) {
-                    // std::cout << "checking case. size x " << size_x << " size y " << size_y << " pos y " << y << " and x " << x << '\n'; // indeksitarkistus
-                    
                     // find sum of pixels in / out this rectangle for all color components
                     double inner_sums_squares_sum = 0.0;
                     double outer_sums_squares_sum = 0.0;
@@ -111,10 +109,6 @@ Result segment(int ny, int nx, const float *data) {
 
                         double out_sum = sums[3*nx*ny + (c-3)] - in_sum;
                         outer_sums_squares_sum += out_sum * out_sum; // sums_c has the sums of the full image stored
-
-                        // // verify that sums are correct
-                        // std::cout << " sum of inner pixels: " << sum_inner;
-                        // std::cout << ", sum of outer pixels: " << sum_outer <<'\n';
                     }
 
                     // find sum of squares within this rectangle
