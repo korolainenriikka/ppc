@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <omp.h>
+#include <limits>
 
 struct Result {
     int y0;
@@ -63,6 +64,7 @@ Result segment(int ny, int nx, const float *data) {
     int thread_count = omp_get_max_threads();
     std::vector<float> min_sse(thread_count, total_sum); // error is sum_of_squares - stuff, so always less than sum of squares
     std::vector<Result> min_results(thread_count, empty_result); // error is sum_of_squares - stuff, so always less than sum of squares
+    int full_size = nx*ny;
     #pragma omp parallel for schedule(static, 1)
     for (int size_y = 1; size_y <= ny ; ++size_y) { 
         for (int size_x = 1; size_x <= nx; ++size_x) {
@@ -73,7 +75,7 @@ Result segment(int ny, int nx, const float *data) {
 
             // run comparison between rectangles of equal size
             int rec_size = size_y * size_x;
-            int outer_size = nx*ny - rec_size;
+            int outer_size = full_size - rec_size;
 
             for (int y = 0; y <= ny - size_y; ++y) {
                 for (int x = 0; x <= nx - size_x; ++x) {
@@ -81,14 +83,11 @@ Result segment(int ny, int nx, const float *data) {
 
                     // find sum of color component in inner / outer rectangle
                     int in_sum = inner_sum(x, y, size_x, size_y, nx, sums);
-                    long inner_sums_squares_sum = in_sum * in_sum;
-
                     int out_sum = total_sum - in_sum;
-                    long outer_sums_squares_sum = out_sum * out_sum; // sums_c has the sums of the full image stored
 
                     // find inner and outer sse
-                    float sse_inner = in_sum - ((1.0/rec_size) * inner_sums_squares_sum);
-                    float sse_outer = out_sum - ((1.0/outer_size) * outer_sums_squares_sum);
+                    float sse_inner = in_sum * (1 - ((1.0/rec_size) * in_sum));
+                    float sse_outer = out_sum * (1 - ((1.0/outer_size) * out_sum));
                     float sse = sse_inner + sse_outer;
 
                     // compare sse to current minimum
@@ -110,7 +109,7 @@ Result segment(int ny, int nx, const float *data) {
     float best_sse = total_sum;
     int thread_with_best_result = 0;
     for (int thread_i = 0; thread_i < thread_count; ++thread_i) {
-        if (min_sse[thread_i] < best_sse) {
+        if (min_sse[thread_i] <= best_sse) {
             best_sse = min_sse[thread_i];
             thread_with_best_result = thread_i;
         }
