@@ -25,7 +25,7 @@ benchmark 3
 29.7 sec
 
 
-
+error graderissa, laita ku pääset discordiin
 Standard error:
 Could not add performance counter 'cycles': Permission denied
 Profiling requires that /proc/sys/kernel/perf_event_paranoid is configured to allow users to collect metrics. You can try running `sudo sh -c "echo '0'>/proc/sys/kernel/perf_event_paranoid"`
@@ -48,3 +48,6 @@ Traceback (most recent call last):
     if total_time:
        ^^^^^^^^^^
 UnboundLocalError: cannot access local variable 'total_time' where it is not associated with a value
+
+
+is6b: ei löydä std juttuja??
