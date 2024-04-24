@@ -1,0 +1,16 @@
+IDEA
+
+yks thread tutkii yhen koon
+gpu result 
+coords: x,y pareja, joissa minimi sse-rectanglen sijainteja
+sse's: nx*ny vektori, jossa kunkin koon pienin SSE
+
+tilanne: memcpy:t spaguttaa, on epäselvää minkäkokosta arrayta tarvitaan.
+
+mieti rauhallisesti ja debuggaa.
+1. mikä kokoiset array tarvitaan tarkalleen?
+2. malloc --> kato et ei errorei
+3. memcpy --> kato että gpu saa oikeat tiedot
+4. aja kernel --> kato ettei kirjoteta gpu:n muistialueen ulkopuolelle.
+5. memcpy takas --> kato et ei errorei --> kato et tulee oikeenlaista kamaa
+6. postprocessing --> kato ettei lueta muistin ulkopuolelta
