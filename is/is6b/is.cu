@@ -23,7 +23,7 @@ static inline void check(cudaError_t err, const char* context) {
 #define CHECK(x) check(x, #x)
 
 static inline int divup(int a, int b) {
-    return (a + b - 1)/b;
+    return ((a + b - 1)/b) +1;
 }
 
 /**
@@ -157,13 +157,7 @@ Result segment(int ny, int nx, const float *data) {
 
     // find best segmentation
     float min_sse = 600*600;
-    // int best_size_x = 0;
-    // int best_size_y = 0;
     Result best_result{0, 0, 0, 0, {0, 0, 0}, {0, 0, 0}};
-    // benchmark 3.txt: y=ny, x=1 kohdassa ollaan muistissa paikassa johon ei olla kirjotettu.
-    // siellä sse on pieni, ja systeemi luulee että jess hyvä segmentointi ja palauttaa sen.
-    // jos laittaa size_y < ny, menee koordinaattien suhteen läpi. sillon inner/outer sum laskenta jostain syystä timeouttaa?
-    // mut muut testit failaa, jos muuttaa ton <= pois (esim small simple 1)
     for (int size_y = 1; size_y <= ny; ++size_y) {
         for (int size_x = 1; size_x <= nx; ++size_x) {
             if (size_x == nx && size_y == ny) {
@@ -179,31 +173,20 @@ Result segment(int ny, int nx, const float *data) {
                 best_result.x0 = x0;
                 best_result.y1 = y0 + size_y;
                 best_result.x1 = x0 + size_x;
-                // best_size_x = size_x;
-                // best_size_y = size_y;
             }
         }
     }
     
     // find averages for best segmentation
-    // int min_size_x = best_result.x1 - best_result.x0;
-    // int min_size_y = best_result.y1 - best_result.y0;
-    // int rec_size = min_size_x * min_size_y;
-    // int outer_size = nx*ny - rec_size;
-    // int in_sum = inner_sum(best_result.x0, best_result.y0, min_size_x, min_size_y, nx, sums.data());
-    // float inner_avg = in_sum / rec_size;
+    int min_size_x = best_result.x1 - best_result.x0;
+    int min_size_y = best_result.y1 - best_result.y0;
+    float rec_size = min_size_x * min_size_y;
+    float outer_size = nx*ny - rec_size;
+    int in_sum = inner_sum(best_result.x0, best_result.y0, min_size_x, min_size_y, nx, sums.data());
+    float inner_avg = in_sum / rec_size;
 
-    // int out_sum = sums[nx*ny-1] - in_sum;
-    // float outer_avg = out_sum / outer_size;
-
-    // for (int i = 10; i < 1000; ++i) {
-    //     std::cout << best_sses[i] << ' ';
-    // }
-    // paras alkupiste on (291, 85). tosi monella koolla alusta, kaikilla koilla, toi on oikein.)
-    // koko jonka löydän on (400,1) (y,x). ihan väärin.
-
-    float inner_avg = 0.0;
-    float outer_avg = 0.0;
+    int out_sum = sums[nx*ny-1] - in_sum;
+    float outer_avg = out_sum / outer_size;
 
     best_result.outer[0] = outer_avg;
     best_result.outer[1] = outer_avg;
